@@ -38,32 +38,35 @@ export default function Transactions() {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">Filter Transactions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="space-y-8">
+      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200/50 p-8">
+        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+          <span className="w-1.5 h-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded-full"></span>
+          Filter Transactions
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">From Date</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">From Date</label>
             <input 
               type="date" 
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
               value={filters.from} 
               onChange={(e) => setFilters({ ...filters, from: e.target.value, page: 1 })} 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">To Date</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">To Date</label>
             <input 
               type="date" 
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
               value={filters.to} 
               onChange={(e) => setFilters({ ...filters, to: e.target.value, page: 1 })} 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">Type</label>
             <select 
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white" 
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white font-medium" 
               value={filters.type} 
               onChange={(e) => setFilters({ ...filters, type: e.target.value, page: 1 })}
             >
@@ -73,17 +76,17 @@ export default function Transactions() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">Category</label>
             <input 
               placeholder="Filter by category" 
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
               value={filters.category} 
               onChange={(e) => setFilters({ ...filters, category: e.target.value, page: 1 })} 
             />
           </div>
           <div className="flex items-end">
             <button 
-              className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow-md" 
+              className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg" 
               onClick={() => qc.invalidateQueries({ queryKey: ['transactions'] })}
             >
               Apply Filters
@@ -95,73 +98,74 @@ export default function Transactions() {
       <AddForm onAdd={(payload) => create.mutate(payload as any)} />
 
       {create.isError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-2xl p-5 text-red-700 font-medium shadow-lg">
           Failed to add transaction. Please check your inputs and try again.
         </div>
       )}
 
       {isLoading ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <div className="text-slate-600">Loading transactions...</div>
+        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200/50 p-16 text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div className="text-slate-600 font-medium">Loading transactions...</div>
         </div>
       ) : isError ? (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-2xl p-5 text-red-700 font-medium shadow-lg">
           Failed to load transactions. Please try again.
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200/50 overflow-hidden">
           {data && data.items.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">
+            <div className="p-16 text-center text-slate-500 font-medium">
               No transactions found for the selected filters.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left p-4 text-sm font-semibold text-slate-700">Date</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-700">Type</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-700">Category</th>
-                    <th className="text-right p-4 text-sm font-semibold text-slate-700">Amount</th>
-                    <th className="text-left p-4 text-sm font-semibold text-slate-700">Description</th>
+                  <tr className="bg-gradient-to-r from-slate-50 to-blue-50 border-b-2 border-slate-200">
+                    <th className="text-left p-5 text-sm font-bold text-slate-700 uppercase tracking-wide">Date</th>
+                    <th className="text-left p-5 text-sm font-bold text-slate-700 uppercase tracking-wide">Type</th>
+                    <th className="text-left p-5 text-sm font-bold text-slate-700 uppercase tracking-wide">Category</th>
+                    <th className="text-right p-5 text-sm font-bold text-slate-700 uppercase tracking-wide">Amount</th>
+                    <th className="text-left p-5 text-sm font-bold text-slate-700 uppercase tracking-wide">Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data?.items.map((tx) => (
-                    <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="p-4 text-sm text-slate-700">{new Date(tx.date).toLocaleDateString()}</td>
-                      <td className="p-4">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                          tx.type === 'INCOME' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    <tr key={tx.id} className="border-b border-slate-100 hover:bg-blue-50/50 transition-colors">
+                      <td className="p-5 text-sm text-slate-700 font-medium">{new Date(tx.date).toLocaleDateString()}</td>
+                      <td className="p-5">
+                        <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide ${
+                          tx.type === 'INCOME' ? 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800' : 'bg-gradient-to-r from-rose-100 to-rose-200 text-rose-800'
                         }`}>
                           {tx.type}
                         </span>
                       </td>
-                      <td className="p-4 text-sm text-slate-700">{tx.category}</td>
-                      <td className="p-4 text-right text-sm font-semibold text-slate-900">
+                      <td className="p-5 text-sm text-slate-700 font-medium">{tx.category}</td>
+                      <td className="p-5 text-right text-sm font-bold text-slate-900">
                         ${(tx as any).amount?.toFixed ? (tx as any).amount.toFixed(2) : Number((tx as any).amount).toFixed(2)}
                       </td>
-                      <td className="p-4 text-sm text-slate-600">{tx.description || '—'}</td>
+                      <td className="p-5 text-sm text-slate-600">{tx.description || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-          <div className="flex items-center justify-between p-4 bg-slate-50 border-t border-slate-200">
-            <div className="text-sm text-slate-600">
+          <div className="flex items-center justify-between p-6 bg-gradient-to-r from-slate-50 to-blue-50 border-t-2 border-slate-200">
+            <div className="text-sm text-slate-600 font-medium">
               Page {data?.page} of {data ? Math.ceil(data.total / data.pageSize) : 1} · Total: {data?.total || 0} transactions
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button 
-                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium" 
+                className="px-5 py-2.5 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-white hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-bold shadow-sm" 
                 disabled={(data?.page ?? 1) <= 1} 
                 onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
               >
                 Previous
               </button>
               <button 
-                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium" 
+                className="px-5 py-2.5 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-white hover:border-slate-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all font-bold shadow-sm" 
                 disabled={data ? data.page >= Math.ceil(data.total / data.pageSize) : true} 
                 onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
               >
@@ -178,22 +182,25 @@ export default function Transactions() {
 function AddForm({ onAdd }: { onAdd: (tx: Omit<Tx, 'id'>) => void }) {
   const [form, setForm] = useState<Omit<Tx, 'id'>>({ type: 'EXPENSE', amount: 0, category: '', description: '', date: new Date().toISOString().slice(0, 10) } as any)
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-      <h2 className="text-lg font-semibold text-slate-800 mb-4">Add New Transaction</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+    <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200/50 p-8">
+      <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+        <span className="w-1.5 h-8 bg-gradient-to-b from-emerald-600 to-emerald-800 rounded-full"></span>
+        Add New Transaction
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">Date</label>
           <input 
             type="date" 
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
             value={form.date as any} 
             onChange={(e) => setForm({ ...form, date: e.target.value as any })} 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">Type</label>
           <select 
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white" 
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white font-medium" 
             value={form.type} 
             onChange={(e) => setForm({ ...form, type: e.target.value as any })}
           >
@@ -202,37 +209,37 @@ function AddForm({ onAdd }: { onAdd: (tx: Omit<Tx, 'id'>) => void }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">Category</label>
           <input 
             placeholder="e.g., Food" 
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
             value={form.category} 
             onChange={(e) => setForm({ ...form, category: e.target.value })} 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Amount</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">Amount</label>
           <input 
             placeholder="0.00" 
             type="number" 
             step="0.01" 
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
             value={form.amount as any} 
             onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-3">Description</label>
           <input 
             placeholder="Optional" 
-            className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" 
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white" 
             value={form.description || ''} 
             onChange={(e) => setForm({ ...form, description: e.target.value })} 
           />
         </div>
         <div className="flex items-end">
           <button 
-            className="w-full px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-all shadow-sm hover:shadow-md" 
+            className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-md hover:shadow-lg" 
             onClick={() => onAdd({ ...form, date: new Date(form.date as any).toISOString() })}
           >
             Add Transaction

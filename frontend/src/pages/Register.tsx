@@ -11,10 +11,13 @@ export default function Register() {
   const navigate = useNavigate()
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<Form>({ resolver: zodResolver(schema) })
   return (
-    <div className="max-w-md mx-auto mt-12">
-      <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8">
-        <h1 className="text-2xl font-bold text-slate-800 mb-6">Create Your Account</h1>
-        <form className="space-y-5" onSubmit={handleSubmit(async (v) => {
+    <div className="max-w-md mx-auto mt-20">
+      <div className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-slate-200/50 p-10">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-3">Create Your Account</h1>
+          <p className="text-slate-600">Get started with your financial journey</p>
+        </div>
+        <form className="space-y-6" onSubmit={handleSubmit(async (v) => {
           try {
             const res = await api.post('/api/auth/register', v)
             localStorage.setItem('token', res.data.token)
@@ -25,35 +28,35 @@ export default function Register() {
           }
         })}>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+            <label className="block text-sm font-bold text-slate-700 mb-3">Full Name</label>
             <input 
               placeholder="John Doe" 
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white text-slate-900" 
+              className="w-full px-5 py-4 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white text-slate-900 font-medium" 
               {...register('name')} 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
+            <label className="block text-sm font-bold text-slate-700 mb-3">Email Address</label>
             <input 
               placeholder="you@example.com" 
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white text-slate-900" 
+              className="w-full px-5 py-4 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white text-slate-900 font-medium" 
               {...register('email')} 
             />
-            {errors.email && <div className="text-red-600 text-sm mt-1.5">{errors.email.message}</div>}
+            {errors.email && <div className="text-red-600 text-sm mt-2 font-medium">{errors.email.message}</div>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+            <label className="block text-sm font-bold text-slate-700 mb-3">Password</label>
             <input 
               type="password" 
               placeholder="At least 6 characters" 
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white text-slate-900" 
+              className="w-full px-5 py-4 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all bg-white text-slate-900 font-medium" 
               {...register('password')} 
             />
-            {errors.password && <div className="text-red-600 text-sm mt-1.5">{errors.password.message}</div>}
+            {errors.password && <div className="text-red-600 text-sm mt-2 font-medium">{errors.password.message}</div>}
           </div>
           <button 
             disabled={isSubmitting} 
-            className="w-full px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+            className="w-full px-5 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 duration-300"
           >
             {isSubmitting ? 'Creating account...' : 'Create Account'}
           </button>

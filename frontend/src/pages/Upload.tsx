@@ -101,41 +101,43 @@ export default function Upload() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">Import Transactions</h1>
-        <p className="text-slate-600 mb-6">Upload receipts or bank statements to automatically import your transactions</p>
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg border border-slate-200/50 p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-3">Import Transactions</h1>
+          <p className="text-slate-600 font-medium">Upload receipts or bank statements to automatically import your transactions</p>
+        </div>
         
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-3 mb-8">
           <button 
-            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
               tab === 'receipt' 
-                ? 'bg-blue-600 text-white shadow-sm' 
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
             onClick={() => setTab('receipt')}
           >
-            📸 Receipt OCR
+            Receipt OCR
           </button>
           <button 
-            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
               tab === 'statement' 
-                ? 'bg-blue-600 text-white shadow-sm' 
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
             onClick={() => setTab('statement')}
           >
-            📄 Statement PDF
+            Statement PDF
           </button>
           <button 
-            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
               tab === 'ai' 
-                ? 'bg-blue-600 text-white shadow-sm' 
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
             onClick={() => setTab('ai')}
           >
-            🤖 AI Analyzer
+            AI Analyzer
           </button>
         </div>
 
@@ -162,28 +164,28 @@ export default function Upload() {
 
       {/* AI Review Modal */}
       {showAiReview && aiTransactions.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">Review Extracted Transactions</h2>
-          <p className="text-slate-600 mb-4">Please review and edit the transactions before adding them</p>
+        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl border border-slate-200/50 p-8">
+          <h2 className="text-2xl font-bold text-slate-800 mb-3">Review Extracted Transactions</h2>
+          <p className="text-slate-600 mb-6 font-medium">Please review and edit the transactions before adding them</p>
           
-          <div className="space-y-4 mb-6">
+          <div className="space-y-5 mb-8">
             {aiTransactions.map((transaction, index) => (
-              <div key={index} className="border border-slate-300 rounded-lg p-4 bg-slate-50">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div key={index} className="border-2 border-slate-300 rounded-xl p-6 bg-gradient-to-br from-slate-50 to-blue-50 hover:shadow-md transition-all">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Date</label>
                     <input 
                       type="date" 
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none bg-white"
                       value={transaction.date}
                       onChange={(e) => handleUpdateTransaction(index, 'date', e.target.value)}
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Type</label>
                     <select 
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none bg-white font-medium"
                       value={transaction.type}
                       onChange={(e) => handleUpdateTransaction(index, 'type', e.target.value)}
                     >
@@ -193,31 +195,31 @@ export default function Upload() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
                     <input 
                       type="text" 
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none bg-white"
                       value={transaction.category}
                       onChange={(e) => handleUpdateTransaction(index, 'category', e.target.value)}
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Amount</label>
                     <input 
                       type="number" 
                       step="0.01"
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none bg-white"
                       value={transaction.amount}
                       onChange={(e) => handleUpdateTransaction(index, 'amount', parseFloat(e.target.value))}
                     />
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
                     <input 
                       type="text" 
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none bg-white"
                       value={transaction.description}
                       onChange={(e) => handleUpdateTransaction(index, 'description', e.target.value)}
                     />
@@ -225,25 +227,25 @@ export default function Upload() {
                 </div>
                 
                 <button 
-                  className="mt-3 px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-all text-sm font-medium"
+                  className="mt-4 px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-100 to-rose-100 text-red-700 hover:from-red-200 hover:to-rose-200 transition-all font-bold border-2 border-red-200"
                   onClick={() => handleDeleteTransaction(index)}
                 >
-                  🗑️ Delete
+                  Delete Transaction
                 </button>
               </div>
             ))}
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button 
-              className="flex-1 px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md font-medium"
+              className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold"
               onClick={handleConfirm}
               disabled={confirmAi.isPending}
             >
-              {confirmAi.isPending ? '⏳ Saving...' : `✅ Add ${aiTransactions.length} Transaction${aiTransactions.length !== 1 ? 's' : ''}`}
+              {confirmAi.isPending ? 'Saving...' : `Add ${aiTransactions.length} Transaction${aiTransactions.length !== 1 ? 's' : ''}`}
             </button>
             <button 
-              className="px-6 py-3 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition-all font-medium"
+              className="px-8 py-4 rounded-xl border-2 border-slate-300 text-slate-700 hover:bg-slate-100 transition-all font-bold"
               onClick={handleCancel}
             >
               Cancel
@@ -252,45 +254,45 @@ export default function Upload() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {errorMessage && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-            ❌ {errorMessage}
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-2xl p-5 text-red-700 font-medium shadow-lg">
+            {errorMessage}
             <div className="text-sm mt-2 text-red-600">Check the browser console for more details.</div>
           </div>
         )}
         
         {receipt.isPending && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-700">
-            ⏳ Processing receipt... This may take a moment.
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 text-blue-700 font-medium shadow-lg">
+            Processing receipt... This may take a moment.
           </div>
         )}
         {receipt.data && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-700">
-            ✅ Successfully imported {receipt.data.imported} transaction{receipt.data.imported !== 1 ? 's' : ''} from receipt
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl p-5 text-emerald-700 font-medium shadow-lg">
+            Successfully imported {receipt.data.imported} transaction{receipt.data.imported !== 1 ? 's' : ''} from receipt
           </div>
         )}
         
         {statement.isPending && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-700">
-            ⏳ Processing statement... This may take a moment.
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 text-blue-700 font-medium shadow-lg">
+            Processing statement... This may take a moment.
           </div>
         )}
         {statement.data && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-700">
-            ✅ Successfully imported {statement.data.imported} transaction{statement.data.imported !== 1 ? 's' : ''} from statement
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl p-5 text-emerald-700 font-medium shadow-lg">
+            Successfully imported {statement.data.imported} transaction{statement.data.imported !== 1 ? 's' : ''} from statement
           </div>
         )}
         
         {aiReceipt.isPending && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-700">
-            🤖 Analyzing receipt with AI... This may take a moment.
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-5 text-blue-700 font-medium shadow-lg">
+            Analyzing receipt with AI... This may take a moment.
           </div>
         )}
         
         {confirmAi.data && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-700">
-            ✅ Successfully added {confirmAi.data.imported} transaction{confirmAi.data.imported !== 1 ? 's' : ''}
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl p-5 text-emerald-700 font-medium shadow-lg">
+            Successfully added {confirmAi.data.imported} transaction{confirmAi.data.imported !== 1 ? 's' : ''}
           </div>
         )}
       </div>
@@ -303,10 +305,10 @@ function FileBox({ onFile, label, description }: { onFile: (f: File) => void; la
   
   return (
     <label 
-      className={`border-2 border-dashed rounded-xl px-8 py-16 block text-center cursor-pointer transition-all ${
+      className={`border-2 border-dashed rounded-2xl px-8 py-20 block text-center cursor-pointer transition-all duration-300 ${
         isDragging 
-          ? 'border-blue-500 bg-blue-50' 
-          : 'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50'
+          ? 'border-blue-500 bg-blue-50 shadow-lg scale-102' 
+          : 'border-slate-300 bg-gradient-to-br from-slate-50 to-blue-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md'
       }`}
       onDragOver={(e) => {
         e.preventDefault()
@@ -321,10 +323,10 @@ function FileBox({ onFile, label, description }: { onFile: (f: File) => void; la
         }
       }}
     >
-      <div className="text-5xl mb-4">📁</div>
-      <div className="text-lg font-semibold text-slate-800 mb-2">{label}</div>
-      <div className="text-sm text-slate-600 mb-4">{description}</div>
-      <div className="text-sm text-slate-500">Click to browse or drag and drop</div>
+      <div className="text-6xl mb-5">📁</div>
+      <div className="text-xl font-bold text-slate-800 mb-3">{label}</div>
+      <div className="text-sm text-slate-600 mb-5 font-medium">{description}</div>
+      <div className="text-sm text-slate-500 font-medium">Click to browse or drag and drop</div>
       <input 
         type="file" 
         className="hidden" 
