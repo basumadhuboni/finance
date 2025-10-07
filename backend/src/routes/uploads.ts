@@ -139,49 +139,158 @@ router.post('/receipt', requireAuth, upload.single('file'), async (req: AuthRequ
   }
 });
 
-// PDF table import: expects tabular text; one transaction per line: date,description,category,amount,type
-const tableRow = z.tuple([
-  z.string(),
-  z.string(),
-  z.string(),
-  z.string(),
-  z.enum(['INCOME', 'EXPENSE']),
-]);
+// Enhanced PDF statement parser for tabular data
+// Expected format: date description category amount type
+// Supports multiple separators and intelligently extracts the 5 required fields
+function parseStatementLine(line: string): { date: string; description: string; category: string; amount: string; type: string } | null {
+  // Remove extra whitespace and split by any whitespace
+  const parts = line.trim().split(/\s+/).filter(Boolean);
+  
+  // Need at least 5 parts
+  if (parts.length < 5) {
+    return null;
+  }
+  
+  // Last part should be type (INCOME or EXPENSE)
+  const type = parts[parts.length - 1].toUpperCase();
+  if (type !== 'INCOME' && type !== 'EXPENSE') {
+    return null;
+  }
+  
+  // Second to last should be amount (numeric)
+  const amount = parts[parts.length - 2];
+  const cleanAmount = amount.replace(/[^0-9.\-]/g, '');
+  if (isNaN(parseFloat(cleanAmount))) {
+    return null;
+  }
+  
+  // First part should be date
+  const date = parts[0];
+  if (!/\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(date)) {
+    return null;
+  }
+  
+  // Third to last should be category
+  const category = parts[parts.length - 3];
+  
+  // Everything between date and category is description
+  const description = parts.slice(1, parts.length - 3).join(' ');
+  
+  // If description is empty, something is wrong
+  if (!description) {
+    return null;
+  }
+  
+  return {
+    date,
+    description,
+    category,
+    amount: cleanAmount,
+    type
+  };
+}
 
 router.post('/statement', requireAuth, upload.single('file'), async (req: AuthRequest, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    if (req.file.mimetype !== 'application/pdf') return res.status(400).json({ error: 'PDF required' });
-    
-    const data = await pdf(req.file.buffer);
-    const lines = data.text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    const parsed: Array<z.infer<typeof tableRow>> = [];
-    
-    for (const line of lines) {
-      const parts = line.split(/\s{2,}|\t|\s\|\s/).map((p) => p.trim()).filter(Boolean);
-      if (parts.length < 5) continue;
-      const maybe = tableRow.safeParse([parts[0], parts[1], parts[2], parts[3], parts[4] as any]);
-      if (maybe.success) parsed.push(maybe.data);
+    if (req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'Only PDF files are supported for statement import' });
     }
     
-    if (parsed.length === 0) return res.json({ imported: 0 });
+    let data;
+    try {
+      data = await pdf(req.file.buffer);
+    } catch (error) {
+      console.error('PDF parsing error:', error);
+      return res.status(500).json({ error: 'Failed to parse PDF file' });
+    }
+    
+    const extractedText = data.text;
+    console.log('📄 Extracted PDF text length:', extractedText.length);
+    
+    if (!extractedText || extractedText.trim().length === 0) {
+      return res.status(400).json({ error: 'No text could be extracted from PDF' });
+    }
+    
+    const lines = extractedText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    console.log('📊 Total lines:', lines.length);
+    
+    const parsed: Array<{ date: Date; description: string; category: string; amount: number; type: TransactionType }> = [];
+    const errors: string[] = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Debug: Log first 10 lines to see the actual format
+      if (i < 10) {
+        console.log(`Line ${i + 1}: "${line}"`);
+      }
+      
+      const result = parseStatementLine(line);
+      
+      if (result) {
+        try {
+          const parsedDate = new Date(result.date);
+          const parsedAmount = parseFloat(result.amount);
+          
+          if (isNaN(parsedDate.getTime())) {
+            errors.push(`Line ${i + 1}: Invalid date format`);
+            continue;
+          }
+          
+          if (isNaN(parsedAmount)) {
+            errors.push(`Line ${i + 1}: Invalid amount`);
+            continue;
+          }
+          
+          parsed.push({
+            date: parsedDate,
+            description: result.description,
+            category: result.category,
+            amount: parsedAmount,
+            type: result.type as TransactionType
+          });
+        } catch (error) {
+          errors.push(`Line ${i + 1}: Parse error - ${error}`);
+        }
+      }
+    }
+    
+    console.log('✅ Successfully parsed:', parsed.length, 'transactions');
+    if (errors.length > 0) {
+      console.log('⚠️ Errors:', errors);
+    }
+    
+    if (parsed.length === 0) {
+      return res.status(400).json({ 
+        error: 'No valid transactions found in PDF',
+        details: 'Expected format: date    description    category    amount    type',
+        example: '2024-01-15    Coffee Shop    Dining    12.50    EXPENSE',
+        extractedLines: lines.slice(0, 5),
+        totalLines: lines.length
+      });
+    }
     
     const created = await prisma.$transaction(
-      parsed.map(([dateStr, description, category, amountStr, type]) =>
+      parsed.map((transaction) =>
         prisma.transaction.create({
           data: {
             userId: req.userId!,
-            type: type as TransactionType,
-            amount: parseFloat(amountStr.replace(/[^0-9.\-]/g, '')),
-            category,
-            description,
-            date: new Date(dateStr),
+            type: transaction.type,
+            amount: transaction.amount,
+            category: transaction.category,
+            description: transaction.description,
+            date: transaction.date,
           },
         })
       )
     );
     
-    res.json({ imported: created.length });
+    res.json({ 
+      imported: created.length,
+      skipped: lines.length - parsed.length,
+      errors: errors.length > 0 ? errors.slice(0, 10) : undefined
+    });
   } catch (error) {
     console.error('Statement upload error:', error);
     res.status(500).json({ error: 'Internal server error during statement processing' });
@@ -189,5 +298,3 @@ router.post('/statement', requireAuth, upload.single('file'), async (req: AuthRe
 });
 
 export default router;
-
-

@@ -91,14 +91,6 @@ router.get('/trends', requireAuth, async (req: AuthRequest, res) => {
   if (from) where.date = { ...(where.date || {}), gte: new Date(from) };
   if (to) where.date = { ...(where.date || {}), lte: new Date(to) };
   
-  // Get monthly spending data
-  const monthlyData = await prisma.transaction.groupBy({
-    by: ['type'],
-    where,
-    _sum: { amount: true },
-    _count: { id: true },
-  });
-  
   // Get transactions grouped by month
   const transactions = await prisma.transaction.findMany({
     where,
@@ -131,67 +123,63 @@ router.get('/trends', requireAuth, async (req: AuthRequest, res) => {
   res.json({ monthlyTrends: trendsArray });
 });
 
-// Summary statistics endpoint
+// Summary statistics endpoint - NOW RESPECTS DATE RANGE FILTERS
 router.get('/stats', requireAuth, async (req: AuthRequest, res) => {
   const { from, to } = req.query as any;
   const where: any = { userId: req.userId };
+  
+  // Use the date range from query params, or default to all time
   if (from) where.date = { ...(where.date || {}), gte: new Date(from) };
   if (to) where.date = { ...(where.date || {}), lte: new Date(to) };
   
-  // Get current month data
-  const now = new Date();
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  
-  const currentMonthWhere = {
-    userId: req.userId!,
-    date: {
-      gte: currentMonthStart,
-      lte: currentMonthEnd,
-    },
-  };
-  
-  const [totalIncome, totalExpense, biggestCategory, dailySpending] = await Promise.all([
-    // Total income this month
+  const [totalIncome, totalExpense, biggestCategory, transactions] = await Promise.all([
+    // Total income in selected range
     prisma.transaction.aggregate({
-      where: { ...currentMonthWhere, type: 'INCOME' },
+      where: { ...where, type: 'INCOME' },
       _sum: { amount: true },
     }),
     
-    // Total expenses this month
+    // Total expenses in selected range
     prisma.transaction.aggregate({
-      where: { ...currentMonthWhere, type: 'EXPENSE' },
+      where: { ...where, type: 'EXPENSE' },
       _sum: { amount: true },
     }),
     
-    // Biggest expense category this month
+    // Biggest expense category in selected range
     prisma.transaction.groupBy({
       by: ['category'],
-      where: { ...currentMonthWhere, type: 'EXPENSE' },
+      where: { ...where, type: 'EXPENSE' },
       _sum: { amount: true },
       orderBy: { _sum: { amount: 'desc' } },
       take: 1,
     }),
     
-    // Average daily spending
-    prisma.transaction.aggregate({
-      where: { ...currentMonthWhere, type: 'EXPENSE' },
-      _sum: { amount: true },
-      _count: { id: true },
+    // Get all transactions in range to calculate date span
+    prisma.transaction.findMany({
+      where,
+      select: { date: true },
+      orderBy: { date: 'asc' },
     }),
   ]);
   
   const income = Number(totalIncome._sum?.amount || 0);
   const expense = Number(totalExpense._sum?.amount || 0);
   const savings = income - expense;
-  const savingsRate = income > 0 ? (savings / income) * 100 : 0;
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const avgDailySpending = expense / daysInMonth;
+  const savingsRate = income > 0 ? ((savings / income) * 100) : 0;
+  
+  // Calculate average daily spending based on actual date range
+  let avgDailySpending = 0;
+  if (transactions.length > 0 && expense > 0) {
+    const firstDate = transactions[0].date;
+    const lastDate = transactions[transactions.length - 1].date;
+    const daysDiff = Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    avgDailySpending = expense / Math.max(daysDiff, 1);
+  }
   
   res.json({
-    totalIncome: income,
-    totalExpense: expense,
-    netSavings: savings,
+    totalIncome: Math.round(income * 100) / 100,
+    totalExpense: Math.round(expense * 100) / 100,
+    netSavings: Math.round(savings * 100) / 100,
     savingsRate: Math.round(savingsRate * 100) / 100,
     biggestExpenseCategory: biggestCategory[0]?.category || 'N/A',
     averageDailySpending: Math.round(avgDailySpending * 100) / 100,
