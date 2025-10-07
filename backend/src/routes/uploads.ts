@@ -297,4 +297,180 @@ router.post('/statement', requireAuth, upload.single('file'), async (req: AuthRe
   }
 });
 
+// AI Receipt Analyzer - Extract text and analyze with Gemini
+router.post('/ai-receipt', requireAuth, upload.single('file'), async (req: AuthRequest, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    
+    const mime = req.file.mimetype;
+    let text = '';
+    
+    // Extract text from file (same logic as receipt endpoint)
+    if (mime === 'application/pdf') {
+      try {
+        const data = await pdf(req.file.buffer);
+        text = data.text;
+      } catch (error) {
+        console.error('PDF parsing error:', error);
+        return res.status(500).json({ error: 'Failed to parse PDF file' });
+      }
+    } else {
+      try {
+        const worker = await Tesseract.createWorker('eng', 1, {
+          logger: m => console.log(m)
+        });
+        
+        const { data: { text: ocrText } } = await worker.recognize(req.file.buffer as any);
+        await worker.terminate();
+        text = ocrText;
+      } catch (error) {
+        console.error('OCR processing error:', error);
+        return res.status(500).json({ error: 'Failed to process image with OCR' });
+      }
+    }
+    
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: 'No text could be extracted from the file' });
+    }
+    
+    console.log('📄 Extracted text for AI analysis:', text.substring(0, 200));
+    
+    // Call Gemini API to analyze the receipt
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY not configured in environment variables' });
+    }
+    
+    const prompt = `You are a receipt parser. Extract transaction fields and return ONLY a JSON array, no other text.
+
+Each transaction must have these exact fields:
+- date: ISO date string (YYYY-MM-DD format). If no date found, use today's date: ${new Date().toISOString().split('T')[0]}
+- description: Brief description of the purchase/merchant
+- category: One of: Groceries, Dining, Transportation, Entertainment, Health, Utilities, Shopping, Fuel, Housing, Salary, Freelance, or Uncategorized
+- amount: Number (just the number, no currency symbols)
+- type: Either "INCOME" or "EXPENSE" (most receipts are EXPENSE)
+
+Return ONLY valid JSON array format like this:
+[{"date":"2025-01-15","description":"Coffee Shop","category":"Dining","amount":12.50,"type":"EXPENSE"}]
+
+Receipt text:
+"""
+${text}
+"""`;
+
+    try {
+      const modelName = 'gemini-2.0-flash-exp';
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Gemini API error:', errorData);
+        return res.status(500).json({ error: 'Failed to analyze receipt with AI' });
+      }
+      
+      const result = await response.json();
+      console.log('🤖 Gemini response:', JSON.stringify(result, null, 2));
+      
+      const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!aiText) {
+        return res.status(500).json({ error: 'No response from AI' });
+      }
+      
+      console.log('🧩 Gemini raw output:', aiText);
+      
+      // Extract JSON from the response (Gemini sometimes wraps it in markdown)
+      let jsonText = aiText.trim();
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '');
+      }
+      
+      const transactions = JSON.parse(jsonText);
+      
+      if (!Array.isArray(transactions)) {
+        return res.status(500).json({ error: 'AI returned invalid format' });
+      }
+      
+      // Validate and format transactions
+      const validatedTransactions = transactions.map((t: any) => ({
+        date: t.date || new Date().toISOString().split('T')[0],
+        description: String(t.description || 'Unknown'),
+        category: String(t.category || 'Uncategorized'),
+        amount: parseFloat(t.amount) || 0,
+        type: (t.type === 'INCOME' || t.type === 'EXPENSE') ? t.type : 'EXPENSE'
+      }));
+      
+      // Return extracted transactions for user review
+      res.json({ 
+        extractedText: text,
+        transactions: validatedTransactions
+      });
+      
+    } catch (error) {
+      console.error('AI analysis error:', error);
+      return res.status(500).json({ error: 'Failed to parse AI response: ' + (error as Error).message });
+    }
+    
+  } catch (error) {
+    console.error('AI receipt upload error:', error);
+    res.status(500).json({ error: 'Internal server error during AI receipt processing' });
+  }
+});
+
+// Confirm AI-analyzed transactions
+const confirmSchema = z.object({
+  transactions: z.array(z.object({
+    date: z.string().transform((s) => new Date(s)),
+    description: z.string(),
+    category: z.string(),
+    amount: z.number().positive(),
+    type: z.enum(['INCOME', 'EXPENSE'])
+  }))
+});
+
+router.post('/ai-receipt/confirm', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const parse = confirmSchema.safeParse(req.body);
+    if (!parse.success) return res.status(400).json({ error: parse.error.flatten() });
+    
+    const { transactions } = parse.data;
+    
+    const created = await prisma.$transaction(
+      transactions.map((t) =>
+        prisma.transaction.create({
+          data: {
+            userId: req.userId!,
+            type: t.type as TransactionType,
+            amount: t.amount,
+            category: t.category,
+            description: t.description,
+            date: t.date,
+          },
+        })
+      )
+    );
+    
+    res.json({ imported: created.length, items: created });
+  } catch (error) {
+    console.error('AI confirm error:', error);
+    res.status(500).json({ error: 'Failed to save transactions' });
+  }
+});
+
 export default router;
